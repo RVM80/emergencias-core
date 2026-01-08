@@ -4,28 +4,22 @@ import com.emergencias.model.EmergencyEvent;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Properties;
 
-/**
- * CORE 2: Notificación / alerta.
- * "Envía" la emergencia al 112 mostrando por consola
- * y guardando en un archivo de texto.
- */
 public class AlertSender {
 
-    private final String destino;   // normalmente "112"
-    private final String logFile;   // archivo donde guardamos las alertas
+    private final String destino;
+    private final String logFile;
 
     public AlertSender(Properties cfg) {
-        this.destino = cfg.getProperty("destino", "112");
-        this.logFile = cfg.getProperty("logFile", "alertas.log");
+        String d = cfg.getProperty("destino", "112");
+        this.destino = (d == null || d.trim().isEmpty()) ? "112" : d.trim();
+
+        String lf = cfg.getProperty("logFile", "alertas.log");
+        this.logFile = (lf == null || lf.trim().isEmpty()) ? "alertas.log" : lf.trim();
     }
 
-    /**
-     * Empaqueta y "envía" la alerta:
-     * - imprime en consola
-     * - la persiste en un archivo
-     */
     public void sendAlert(EmergencyEvent event) {
         if (event == null) {
             System.out.println("No hay emergencia que enviar.");
@@ -34,33 +28,34 @@ public class AlertSender {
 
         System.out.println("===== ENVÍO DE ALERTA =====");
         System.out.println("Destino: " + destino);
-        System.out.println("Datos enviados:");
         System.out.println("Tipo: " + event.getTipoEmergencia());
         System.out.println("Ubicación: " + event.getUbicacion());
         System.out.println("Gravedad: " + event.getGravedad());
         System.out.println("Usuario: " + event.getUsuario());
 
-        // Guardamos la alerta en un archivo de texto
-        try (FileWriter fw = new FileWriter(logFile, true)) {
-            fw.write(event + System.lineSeparator());
+        String linea = LocalDateTime.now()
+                + " | destino=" + destino
+                + " | tipo=" + event.getTipoEmergencia()
+                + " | ubicacion=" + event.getUbicacion()
+                + " | gravedad=" + event.getGravedad()
+                + " | usuario=" + event.getUsuario();
 
+        try (FileWriter fw = new FileWriter(logFile, true)) {
+            fw.write(linea + System.lineSeparator());
         } catch (IOException e) {
-            System.out.println("Error guardando la alerta en el archivo: " + e.getMessage());
+            System.out.println("No se pudo guardar la alerta, pero la app continúa.");
         }
     }
 
-    /**
-     * Simula aviso a contactos personales (por ejemplo familiares).
-     * Aquí solo imprimimos por consola.
-     */
     public void notifyContacts(EmergencyEvent event, String... contactos) {
-        if (event == null || contactos == null) {
+        if (event == null || contactos == null || contactos.length == 0) {
             return;
         }
 
-        System.out.println("===== AVISO A CONTACTOS PERSONALES =====");
-        for (String contacto : contactos) {
-            System.out.println("Avisando a " + contacto + " sobre: " + event.getTipoEmergencia()
+        System.out.println("===== AVISO A CONTACTOS =====");
+        for (String c : contactos) {
+            if (c == null || c.trim().isEmpty()) continue;
+            System.out.println("Avisando a " + c + " sobre " + event.getTipoEmergencia()
                     + " en " + event.getUbicacion());
         }
     }
