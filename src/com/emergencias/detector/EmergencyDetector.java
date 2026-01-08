@@ -6,72 +6,72 @@ import com.emergencias.model.UserData;
 import java.util.Properties;
 import java.util.Scanner;
 
-/**
- * CORE 1: Detección / activación de la emergencia.
- * Simula un botón por consola: el usuario pulsa E.
- */
 public class EmergencyDetector {
 
-    private final int threshold;   // umbral mínimo de gravedad (para evitar falsos positivos)
+    private final int threshold;
 
     public EmergencyDetector(Properties cfg) {
-        // Leemos el umbral de app.properties. Si no está, usamos 1.
-        this.threshold = Integer.parseInt(cfg.getProperty("threshold", "1"));
+        int t = 1;
+        try {
+            t = Integer.parseInt(cfg.getProperty("threshold", "1"));
+        } catch (NumberFormatException ignored) {
+            t = 1;
+        }
+        if (t < 0) t = 0;
+        if (t > 3) t = 3;
+        this.threshold = t;
     }
 
-    /**
-     * Detecta una posible emergencia.
-     * Devuelve un EmergencyEvent o null si no se confirma.
-     */
-    public EmergencyEvent detectEvent(UserData user) {
-        Scanner sc = new Scanner(System.in);
+    public EmergencyEvent detectEvent(UserData user, Scanner sc) {
 
         System.out.println("=== DETECCIÓN DE EMERGENCIAS ===");
-        System.out.print("Pulsa 'E' y Enter para activar emergencia (o solo Enter para salir): ");
-        String tecla = sc.nextLine();
+        System.out.print("Pulsa 'E' y Enter para activar emergencia (o Enter para salir): ");
+        String tecla = sc.nextLine().trim();
 
         if (!tecla.equalsIgnoreCase("E")) {
             System.out.println("No se activó ninguna emergencia.");
             return null;
         }
 
-        // pequeña confirmación para evitar falsos positivos
         System.out.print("¿Confirmas la emergencia? (S/N): ");
-        String confirma = sc.nextLine();
+        String confirma = sc.nextLine().trim();
         if (!confirma.equalsIgnoreCase("S")) {
-            System.out.println("Emergencia cancelada por el usuario.");
+            System.out.println("Emergencia cancelada.");
             return null;
         }
 
-        System.out.print("Tipo de emergencia (Sanitaria, Accidente, etc.): ");
-        String tipo = sc.nextLine();
+        System.out.print("Tipo de emergencia: ");
+        String tipo = sc.nextLine().trim();
+        if (tipo.isEmpty()) tipo = "Desconocida";
 
-        System.out.print("Gravedad (0 a 3): ");
-        int gravedad;
-        try {
-            gravedad = Integer.parseInt(sc.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Valor de gravedad no válido. Usando 1 por defecto.");
-            gravedad = 1;
-        }
+        int gravedad = leerGravedad(sc);
 
-        // usamos un método separado para validar la gravedad (como pide la práctica)
-        if (!validateSeverity(gravedad)) {
-            System.out.println("Emergencia descartada: gravedad menor que el umbral (" + threshold + ").");
+        if (gravedad < threshold) {
+            System.out.println("Emergencia descartada por baja gravedad.");
             return null;
         }
 
-        System.out.print("Ubicación (texto, calle, referencia...): ");
-        String ubicacion = sc.nextLine();
+        System.out.print("Ubicación: ");
+        String ubicacion = sc.nextLine().trim();
+        if (ubicacion.isEmpty()) ubicacion = "No indicada";
 
-        // Creamos el modelo de evento
         return new EmergencyEvent(tipo, ubicacion, gravedad, user);
     }
 
-    /**
-     * Comprueba si la gravedad supera el umbral configurado.
-     */
-    private boolean validateSeverity(int gravedad) {
-        return gravedad >= threshold;
+    private int leerGravedad(Scanner sc) {
+        while (true) {
+            System.out.print("Gravedad (0 a 3): ");
+            try {
+                int g = Integer.parseInt(sc.nextLine());
+                if (g < 0 || g > 3) {
+                    System.out.println("Debe estar entre 0 y 3.");
+                    continue;
+                }
+                return g;
+            } catch (NumberFormatException e) {
+                System.out.println("Introduce un número válido.");
+            }
+        }
     }
 }
+
