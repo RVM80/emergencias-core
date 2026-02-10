@@ -6,6 +6,7 @@ import com.emergencias.model.EmergencyEvent;
 import com.emergencias.model.UserData;
 
 import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * Controlador principal (Controller).
@@ -16,31 +17,41 @@ public class EmergencyManager {
     private final EmergencyDetector detector;
     private final AlertSender sender;
     private final UserData user;
+    private final Scanner sc;
 
     public EmergencyManager(Properties cfg) {
-        //inicializamos
         this.detector = new EmergencyDetector(cfg);
         this.sender = new AlertSender(cfg);
 
-        //datos básicos del usuario que vienen de app.properties
         this.user = new UserData(
                 cfg.getProperty("usuario.nombre", "Usuario Demo"),
                 cfg.getProperty("usuario.telefono", "000000000")
         );
+
+        this.sc = new Scanner(System.in);
     }
 
-    /**
-     * Método que arranca el sistema
-     * 1. Detecta la emergencia.
-     * 2. Si hay evento, envía alerta y avisa contactos.
-     */
     public void startSystem() {
-        EmergencyEvent event = detector.detectEvent(user);
+        EmergencyEvent event;
+
+        try {
+            event = detector.detectEvent(user, sc);
+        } catch (Exception e) {
+            System.out.println("Error durante la detección de la emergencia.");
+            return;
+        }
+
+        if (event == null) {
+            System.out.println("Sistema finalizado sin emergencias.");
+            return;
+        }
+
         sender.sendAlert(event);
 
-        // ejemplo simple de notificación a contactos:
-        if (event != null) {
+        try {
             sender.notifyContacts(event, user.getTelefono());
+        } catch (Exception e) {
+            System.out.println("No se pudieron notificar los contactos.");
         }
     }
 }
