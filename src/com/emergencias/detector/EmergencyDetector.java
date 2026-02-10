@@ -6,14 +6,19 @@ import com.emergencias.model.UserData;
 import java.util.Properties;
 import java.util.Scanner;
 
+/**
+ * CORE 1: Detección / activación de la emergencia.
+ * Simula un botón por consola: el usuario pulsa E.
+ */
 public class EmergencyDetector {
 
     private final int threshold;
 
     public EmergencyDetector(Properties cfg) {
         int t = 1;
+        String raw = cfg.getProperty("threshold", "1");
         try {
-            t = Integer.parseInt(cfg.getProperty("threshold", "1"));
+            t = Integer.parseInt(raw);
         } catch (NumberFormatException ignored) {
             t = 1;
         }
@@ -23,9 +28,8 @@ public class EmergencyDetector {
     }
 
     public EmergencyEvent detectEvent(UserData user, Scanner sc) {
-
         System.out.println("=== DETECCIÓN DE EMERGENCIAS ===");
-        System.out.print("Pulsa 'E' y Enter para activar emergencia (o Enter para salir): ");
+        System.out.print("Pulsa 'E' y Enter para activar emergencia (o solo Enter para salir): ");
         String tecla = sc.nextLine().trim();
 
         if (!tecla.equalsIgnoreCase("E")) {
@@ -36,42 +40,63 @@ public class EmergencyDetector {
         System.out.print("¿Confirmas la emergencia? (S/N): ");
         String confirma = sc.nextLine().trim();
         if (!confirma.equalsIgnoreCase("S")) {
-            System.out.println("Emergencia cancelada.");
+            System.out.println("Emergencia cancelada por el usuario.");
             return null;
         }
 
-        System.out.print("Tipo de emergencia: ");
-        String tipo = sc.nextLine().trim();
-        if (tipo.isEmpty()) tipo = "Desconocida";
+        String tipo;
+        while (true) {
+            System.out.print("Tipo de emergencia (Sanitaria, Accidente, etc.): ");
+            tipo = sc.nextLine().trim();
+            if (!tipo.isEmpty()) break;
+            System.out.println("El tipo no puede estar vacío.");
+        }
 
-        int gravedad = leerGravedad(sc);
+        int gravedad = leerEnteroEnRango(sc, "Gravedad (0 a 3): ", 0, 3);
 
-        if (gravedad < threshold) {
-            System.out.println("Emergencia descartada por baja gravedad.");
+        if (!validateSeverity(gravedad)) {
+            System.out.println("Emergencia descartada: gravedad menor que el umbral (" + threshold + ").");
             return null;
         }
 
-        System.out.print("Ubicación: ");
-        String ubicacion = sc.nextLine().trim();
-        if (ubicacion.isEmpty()) ubicacion = "No indicada";
+        System.out.print("Municipio de la emergencia: ");
+        String municipio = sc.nextLine().trim();
+
+        System.out.print("Calle / referencia: ");
+        String calle = sc.nextLine().trim();
+
+        String ubicacion;
+        if (municipio.isEmpty() && calle.isEmpty()) {
+            ubicacion = "Ubicación no indicada";
+        } else if (municipio.isEmpty()) {
+            ubicacion = calle;
+        } else if (calle.isEmpty()) {
+            ubicacion = municipio;
+        } else {
+            ubicacion = municipio + ", " + calle;
+        }
 
         return new EmergencyEvent(tipo, ubicacion, gravedad, user);
     }
 
-    private int leerGravedad(Scanner sc) {
+    private boolean validateSeverity(int gravedad) {
+        return gravedad >= threshold;
+    }
+
+    private int leerEnteroEnRango(Scanner sc, String prompt, int min, int max) {
         while (true) {
-            System.out.print("Gravedad (0 a 3): ");
+            System.out.print(prompt);
+            String s = sc.nextLine().trim();
             try {
-                int g = Integer.parseInt(sc.nextLine());
-                if (g < 0 || g > 3) {
-                    System.out.println("Debe estar entre 0 y 3.");
+                int v = Integer.parseInt(s);
+                if (v < min || v > max) {
+                    System.out.println("Introduce un número entre " + min + " y " + max + ".");
                     continue;
                 }
-                return g;
+                return v;
             } catch (NumberFormatException e) {
-                System.out.println("Introduce un número válido.");
+                System.out.println("Valor no válido. Escribe un número.");
             }
         }
     }
 }
-

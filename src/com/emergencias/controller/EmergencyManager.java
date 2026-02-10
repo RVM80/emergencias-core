@@ -8,6 +8,10 @@ import com.emergencias.model.UserData;
 import java.util.Properties;
 import java.util.Scanner;
 
+/**
+ * Controlador principal (Controller).
+ * Se encarga de orquestar Core 1 (detector) y Core 2 (alertas).
+ */
 public class EmergencyManager {
 
     private final EmergencyDetector detector;
@@ -29,6 +33,7 @@ public class EmergencyManager {
 
     public void startSystem() {
         EmergencyEvent event;
+
         try {
             event = detector.detectEvent(user, sc);
         } catch (Exception e) {
@@ -41,11 +46,7 @@ public class EmergencyManager {
             return;
         }
 
-        try {
-            sender.sendAlert(event);
-        } catch (Exception e) {
-            System.out.println("Error enviando la alerta.");
-        }
+        sender.sendAlert(event);
 
         try {
             sender.notifyContacts(event, user.getTelefono());
