@@ -14,10 +14,12 @@ public class AlertSender {
 
     public AlertSender(Properties cfg) {
         String d = cfg.getProperty("destino", "112");
-        this.destino = (d == null || d.trim().isEmpty()) ? "112" : d.trim();
+        //Fix. d nunca será nulo. Se le da un valor por defecto de 112
+        this.destino = (d.trim().isEmpty()) ? "112" : d.trim();
 
         String lf = cfg.getProperty("logFile", "alertas.log");
-        this.logFile = (lf == null || lf.trim().isEmpty()) ? "alertas.log" : lf.trim();
+        //Fix. lf nunca será nulo. Se le da un valor por defecto de alertas.log
+        this.logFile = (lf.trim().isEmpty()) ? "alertas.log" : lf.trim();
     }
 
     public void sendAlert(EmergencyEvent event) {

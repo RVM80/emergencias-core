@@ -11,7 +11,8 @@ public class EmergencyDetector {
     private final int threshold;
 
     public EmergencyDetector(Properties cfg) {
-        int t = 1;
+        //Fix; t = 1 es redundante porque ya le damos un defaultValue en el try.
+        int t;
         try {
             t = Integer.parseInt(cfg.getProperty("threshold", "1"));
         } catch (NumberFormatException ignored) {
