@@ -2,8 +2,8 @@ package com.emergencias.main;
 
 import com.emergencias.controller.EmergencyManager;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -13,18 +13,21 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) {
-
         Properties cfg = new Properties();
 
-        // Intentamos cargar app.properties desde el directorio de trabajo
-        try (FileInputStream fis = new FileInputStream("app.properties")) {
-            cfg.load(fis);
-            System.out.println("Configuración cargada desde app.properties");
+        // Cargar desde resources (classpath)
+        //FIX. Como el archivo app.properties no cargaba correctamente, se ha movido a la carpeta src y se ha utilizado getResourceAsStream para cargarlo.
+        try (InputStream is = Main.class.getClassLoader().getResourceAsStream("app.properties")) {
+            if (is != null) {
+                cfg.load(is);
+                System.out.println("Configuración cargada desde app.properties");
+            } else {
+                System.out.println("No se encontró app.properties. Se usarán valores por defecto.");
+            }
         } catch (IOException e) {
             System.out.println("No se pudo leer app.properties. Se usarán valores por defecto.");
         }
 
-        // Creamos el controlador principal y arrancamos el sistema
         EmergencyManager manager = new EmergencyManager(cfg);
         manager.startSystem();
     }
