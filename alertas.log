@@ -1,3 +1,0 @@
-Emergencia {tipo='Accidente', ubicacion='Calle San Pedro, numero 24', gravedad=2, usuario=Usuario Demo (600000000)}
-EmergencyEvent{tipoEmergencia='Accidente', ubicacion='Carretera nacional', gravedad=2, usuario=Usuario Demo (600000000)}
-EmergencyEvent{tipoEmergencia='sanitaria', ubicacion='hombre con pierna rota en calle Alicante en la ciudad de Orihuela', gravedad=1, usuario=Usuario Demo (600000000)}

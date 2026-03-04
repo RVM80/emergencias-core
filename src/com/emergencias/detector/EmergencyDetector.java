@@ -8,11 +8,12 @@ import java.util.Scanner;
 
 /**
  * CORE 1: Detección / activación de la emergencia.
- * Simula un botón por consola: el usuario pulsa E.
+ * - Manual: el usuario pulsa E y confirma.
+ * - Automática: temporizador que dispara una emergencia simulada.
  */
 public class EmergencyDetector {
 
-    private final int threshold;
+    private final int threshold; // umbral mínimo (0..3)
 
     public EmergencyDetector(Properties cfg) {
         int t = 1;
@@ -22,13 +23,20 @@ public class EmergencyDetector {
         } catch (NumberFormatException ignored) {
             t = 1;
         }
+
+        // Aseguramos rango 0..3
         if (t < 0) t = 0;
         if (t > 3) t = 3;
+
         this.threshold = t;
     }
 
+    /**
+     * Disparador MANUAL (por consola).
+     * Devuelve un EmergencyEvent si se confirma y supera el umbral.
+     */
     public EmergencyEvent detectEvent(UserData user, Scanner sc) {
-        System.out.println("=== DETECCIÓN DE EMERGENCIAS ===");
+        System.out.println("=== DETECCIÓN DE EMERGENCIAS (MANUAL) ===");
         System.out.print("Pulsa 'E' y Enter para activar emergencia (o solo Enter para salir): ");
         String tecla = sc.nextLine().trim();
 
@@ -79,10 +87,37 @@ public class EmergencyDetector {
         return new EmergencyEvent(tipo, ubicacion, gravedad, user);
     }
 
+    /**
+     * Disparador AUTOMÁTICO (por temporizador).
+     * Espera X segundos y crea una emergencia simulada.
+     */
+    public EmergencyEvent detectEventAutomatic(UserData user, int segundos) {
+        System.out.println("=== DETECCIÓN DE EMERGENCIAS (AUTOMÁTICA) ===");
+        System.out.println("Modo automático: esperando " + segundos + " segundos...");
+
+        try {
+            Thread.sleep(segundos * 1000L);
+        } catch (InterruptedException e) {
+            System.out.println("Temporizador interrumpido.");
+            return null;
+        }
+
+        // Datos simulados
+        String tipo = "Sanitaria";
+        int gravedad = Math.max(threshold, 1); // asegura pasar el umbral
+        String ubicacion = "Ubicación simulada (sin GPS real)";
+
+        System.out.println("Activación automática detectada.");
+
+        return new EmergencyEvent(tipo, ubicacion, gravedad, user);
+    }
+
+    // Valida la gravedad comparándola con el umbral
     private boolean validateSeverity(int gravedad) {
         return gravedad >= threshold;
     }
 
+    // Lee un entero en un rango (evita errores de NumberFormatException)
     private int leerEnteroEnRango(Scanner sc, String prompt, int min, int max) {
         while (true) {
             System.out.print(prompt);
